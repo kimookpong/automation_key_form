@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 // Views & static
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "..", "views"));
+app.set("view cache", false); // Disable view cache for development
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -30,7 +31,25 @@ app.get("/", (req, res) => {
 app.get("/jobs/:id", (req, res) => {
   const job = jobManager.getJob(req.params.id);
   if (!job) return res.status(404).send("Job not found");
-  res.render("job", { job });
+
+  // Get Excel data from jobManager
+  const excelData = jobManager.getExcelData(req.params.id) || null;
+  console.log(
+    "Excel Data for job",
+    req.params.id,
+    ":",
+    excelData ? `${excelData.length} rows` : "null"
+  );
+  if (excelData && excelData.length > 0) {
+    console.log(
+      "First row type:",
+      typeof excelData[0],
+      "isArray:",
+      Array.isArray(excelData[0])
+    );
+  }
+
+  res.render("job", { job, excelData });
 });
 
 app.get("/api/jobs", (req, res) => {

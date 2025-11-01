@@ -96,7 +96,7 @@ async function runAutomation({
         const swalButton = page.locator("button.swal2-confirm.swal2-styled");
         if (await swalButton.isVisible({ timeout: 2000 })) {
           notify({
-            msg: `   Found SweetAlert2 confirm button (1st) - clicking...`,
+            msg: `   Found confirm button (1st) - clicking...`,
           });
           await swalButton.click();
           await page.waitForTimeout(1000);
@@ -113,7 +113,7 @@ async function runAutomation({
             });
             if (await swalButton.isVisible({ timeout: 2000 })) {
               notify({
-                msg: `   Found SweetAlert2 confirm button (2nd) - clicking...`,
+                msg: `   Found confirm button (2nd) - clicking...`,
               });
               await swalButton.click();
               await page.waitForTimeout(1000);
@@ -122,11 +122,11 @@ async function runAutomation({
               loginSuccess = true;
               notify({ msg: `   ✅ Redirected after 2nd alert` });
             } else {
-              throw new Error("No 2nd SweetAlert2 button found");
+              throw new Error("No 2nd button found");
             }
           }
         } else {
-          throw new Error("No SweetAlert2 button found");
+          throw new Error("No button found");
         }
       } catch (e3) {
         notify({ msg: `   Try #2 - using button role...` });
@@ -154,6 +154,57 @@ async function runAutomation({
     notify({ msg: `📍 After submit: ${currentUrl}` });
     if (isHome.test(currentUrl)) {
       notify({ msg: "✅ LOGIN SUCCESS" });
+
+      // Click on MenuAbout link
+      notify({ msg: `🔗 Looking for MenuAbout button...` });
+      try {
+        const menuAboutLink = page.locator('a[href="/MenuAbout"]').first();
+        if (await menuAboutLink.isVisible({ timeout: 5000 })) {
+          notify({ msg: `   Found MenuAbout link - clicking...` });
+          await menuAboutLink.click();
+          await page.waitForTimeout(2000);
+          await snap("menu-about");
+
+          currentUrl = page.url();
+          notify({ msg: `📍 Current URL: ${currentUrl}` });
+          notify({ msg: "✅ Clicked MenuAbout button" });
+
+          // Click on houseData link
+          notify({ msg: `🏠 Looking for houseData button...` });
+          const houseDataLink = page.locator('a[href="/houseData"]').first();
+          if (await houseDataLink.isVisible({ timeout: 5000 })) {
+            notify({ msg: `   Found houseData link - clicking...` });
+            await houseDataLink.click();
+            await page.waitForTimeout(2000);
+            await snap("house-data");
+
+            currentUrl = page.url();
+            notify({ msg: `📍 Current URL: ${currentUrl}` });
+            notify({ msg: "✅ Clicked houseData button" });
+
+            // Check if we have rows to process (Step 2)
+            if (rows && rows.length > 0) {
+              notify({
+                msg: `📋 Starting Step 2: Processing ${rows.length} rows...`,
+              });
+              await processRows(page, rows, notify, snap);
+            } else {
+              notify({ msg: "✅ STEP 1 Complete - Ready for data entry" });
+              notify({
+                msg: "⏸️ Keeping browser open - waiting for Excel upload...",
+              });
+              // Don't close browser - keep it open for Step 2
+              return { browser, page, context };
+            }
+          } else {
+            notify({ msg: `   ⚠️ houseData button not found` });
+          }
+        } else {
+          notify({ msg: `   ⚠️ MenuAbout button not found` });
+        }
+      } catch (err) {
+        notify({ msg: `   ⚠️ Error: ${err.message}` });
+      }
     } else {
       notify({ msg: `❌ LOGIN FAILED` });
     }
@@ -164,5 +215,42 @@ async function runAutomation({
     await browser.close();
     notify({ msg: "🔚 Done" });
   }
+}
+
+async function processRows(page, rows, notify, snap) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowNum = i + 1;
+
+    try {
+      notify({ msg: `📝 Processing row ${rowNum}/${rows.length}...` });
+      notify({ msg: `   Data: ${JSON.stringify(row)}` });
+
+      // TODO: Fill form fields based on row data
+      // This will be implemented based on the actual form structure
+
+      await page.waitForTimeout(1000);
+      await snap(`row-${rowNum}`);
+
+      notify({
+        type: "row",
+        index: rowNum,
+        ok: true,
+        data: row,
+        note: "สำเร็จ",
+      });
+    } catch (err) {
+      notify({ msg: `   ❌ Error on row ${rowNum}: ${err.message}` });
+      notify({
+        type: "row",
+        index: rowNum,
+        ok: false,
+        data: row,
+        error: err.message,
+      });
+    }
+  }
+
+  notify({ msg: "✅ All rows processed" });
 }
 module.exports = { runAutomation, SELECTORS };

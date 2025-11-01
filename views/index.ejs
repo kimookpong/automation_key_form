@@ -7,97 +7,128 @@
   <link rel="stylesheet" href="/public/style.css" />
 </head>
 <body>
-  <header>
-    <h1>Automation Key Form</h1>
-    <nav>
-      <a href="/">หน้าแรก</a>
-    </nav>
-  </header>
-  <main>
- <section class="card">
-  <h2>เฉพาะ Step 1: ตรวจสอบเข้าสู่ระบบ</h2>
-  <form action="/start-login" method="post">
-    <div class="grid">
-      <label>
-        Username
-        <input type="text" name="username" required />
-      </label>
-      <label>
-        Password
-        <input type="password" name="password" required />
-      </label>
-      <label>
-        แสดงหน้าต่างเบราว์เซอร์ระหว่างทำงาน
-        <input type="checkbox" name="showBrowser" />
-      </label>
+
+
+  <main class="home-main">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-icon">✨</div>
+        <h1 class="hero-title">ระบบกรอกข้อมูลอัตโนมัติ</h1>
     </div>
-    <button type="submit">เริ่ม Step 1 (ล็อกอิน)</button>
-  </form>
- </section>
+    </section>
 
- <section class="card">
-  <h2>อัปโหลด Excel และกรอกบัญชี</h2>
-  <form action="/upload" method="post" enctype="multipart/form-data">
-    <div class="grid">
-      <label>
-        Username
-        <input type="text" name="username" required />
-      </label>
-      <label>
-        Password
-        <input type="password" name="password" required />
-      </label>
-      <label>
-        แสดงหน้าต่างเบราว์เซอร์ระหว่างทำงาน
-        <input type="checkbox" name="showBrowser" />
-      </label>
-      <label>
-        ไฟล์ Excel (.xlsx)
-        <input type="file" name="file" accept=".xlsx" required />
-      </label>
-    </div>
-    <button type="submit">เริ่มทำงาน</button>
-  </form>
- </section>
+    <!-- Main Form Card -->
+    <section class="form-card">
 
- <section class="card">
-  <h2>งานล่าสุด</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>สถานะ</th>
-        <th>รวม</th>
-        <th>สำเร็จ</th>
-        <th>ผิดพลาด</th>
-        <th>เริ่ม</th>
-        <th>เสร็จ</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="jobs-tbody">
-      <% jobs.forEach(j => { %>
-        <tr>
-          <td><%= j.id %></td>
-          <td><span class="badge <%= j.status %>"><%= j.status %></span></td>
-          <td><%= j.total %></td>
-          <td><%= j.success %></td>
-          <td><%= j.failed %></td>
-          <td><%= j.startedAt || '-' %></td>
-          <td><%= j.endedAt || '-' %></td>
-          <td><a class="btn" href="/jobs/<%= j.id %>">ดู</a></td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
- </section>
 
+      <form action="/upload" method="post" enctype="multipart/form-data" class="modern-form">
+        <div class="form-grid">
+          <!-- Username Field -->
+          <div class="form-group">
+            <label class="form-label">
+              <span class="label-text">เลขบัตรประจำตัวประชาชน</span>
+            </label>
+            <input type="text" name="username" class="form-input" placeholder="กรอก Username ของคุณ" required />
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <label class="form-label">
+          
+              <span class="label-text">รหัสผ่าน</span>
+            </label>
+            <input type="password" name="password" class="form-input" placeholder="กรอก Password ของคุณ" required />
+          </div>
+
+          <!-- Excel File Upload -->
+          <div class="form-group full-width">
+            <label class="form-label">
+              <span class="label-text">ไฟล์ Excel (.xlsx)</span>
+            </label>
+            <div class="file-upload-wrapper">
+              <input type="file" name="file" id="file-input" accept=".xlsx" class="file-input" required />
+              <label for="file-input" class="file-upload-label">
+                <span class="file-upload-icon">📁</span>
+                <span class="file-upload-text">รับไฟล์</span>
+              </label>
+              <div id="file-selected" class="file-selected" style="display: none;">
+                <span class="file-selected-icon">✅</span>
+                <span id="file-name" class="file-selected-name"></span>
+                <button type="button" id="remove-file" class="file-remove-btn">✕</button>
+              </div>
+            </div>
+          </div>
+
+        <!-- Submit Button -->
+        <div class="form-group full-width">
+          <button type="submit" class="submit-button">
+            <span class="button-icon">🚀</span>
+            <span class="button-text">เริ่มทำงานทันที</span>
+          </button>
+        </div>
+      </form>
+    </section>
   </main>
 
   <script src="/public/app.js"></script>
   <script>
-  // Auto-refresh jobs table via SSE
-  window.setupJobsList && window.setupJobsList(document.getElementById('jobs-tbody'));
+  // File input handling with visual feedback
+  const fileInput = document.getElementById('file-input');
+  const fileSelected = document.getElementById('file-selected');
+  const fileName = document.getElementById('file-name');
+  const fileUploadLabel = document.querySelector('.file-upload-label');
+  const removeFileBtn = document.getElementById('remove-file');
+
+  fileInput.addEventListener('change', function(e) {
+    if (this.files && this.files[0]) {
+      const file = this.files[0];
+      fileName.textContent = file.name;
+      fileSelected.style.display = 'flex';
+      fileUploadLabel.style.display = 'none';
+    }
+  });
+
+  // Remove file button
+  removeFileBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    fileInput.value = '';
+    fileSelected.style.display = 'none';
+    fileUploadLabel.style.display = 'flex';
+  });
+
+  // Drag and drop support
+  const fileWrapper = document.querySelector('.file-upload-wrapper');
+  
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    fileWrapper.addEventListener(eventName, preventDefaults, false);
+  });
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    fileWrapper.addEventListener(eventName, () => {
+      fileUploadLabel.classList.add('drag-over');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    fileWrapper.addEventListener(eventName, () => {
+      fileUploadLabel.classList.remove('drag-over');
+    }, false);
+  });
+
+  fileWrapper.addEventListener('drop', function(e) {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    }
+  });
   </script>
 </body>
 </html>

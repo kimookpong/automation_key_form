@@ -8,25 +8,125 @@
 </head>
 <body>
   <header>
-    <h1>Automation Key Form</h1>
+    <div class="header-brand">
+      <div class="header-logo">🤖</div>
+      <div class="header-text">
+        <h1>Automation Key Form</h1>
+        <span class="header-subtitle">ระบบกรอกข้อมูลอัตโนมัติ</span>
+      </div>
+    </div>
     <nav>
-      <a href="/">หน้าแรก</a>
+      <a href="/" class="<%= (job.status === 'completed' || job.status === 'failed') ? 'nav-button active' : 'nav-button disabled' %>" 
+         id="home-link"
+         onclick="<%= (job.status === 'completed' || job.status === 'failed') ? '' : 'return false;' %>">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-text">หน้าแรก</span>
+      </a>
     </nav>
   </header>
   <main class="split-layout">
     <div class="left-panel">
 <section class="card">
   <h2>งาน: <%= job.id %></h2>
-  <div class="grid stats">
-    <div>สถานะ: <span id="status" class="badge <%= job.status %>"><%= job.status %></span></div>
-    <div>รวม: <span id="total"><%= job.total %></span></div>
-    <div>ประมวลผล: <span id="processed"><%= job.processed %></span></div>
-    <div>สำเร็จ: <span id="success"><%= job.success %></span></div>
-    <div>ผิดพลาด: <span id="failed"><%= job.failed %></span></div>
-    <div>เริ่ม: <span id="startedAt"><%= job.startedAt || '-' %></span></div>
-    <div>เสร็จ: <span id="endedAt"><%= job.endedAt || '-' %></span></div>
+  
+  <!-- Row 1: Status, Start, End -->
+  <div class="stats-row-1">
+    <div class="stat-item">
+      <div class="stat-label">สถานะ</div>
+      <span id="status" class="badge <%= job.status %>"><%= job.status %></span>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">เริ่ม</div>
+      <div class="stat-value" id="startedAt"><%= job.startedAt || '-' %></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">เสร็จ</div>
+      <div class="stat-value" id="endedAt"><%= job.endedAt || '-' %></div>
+    </div>
   </div>
+  
+  <!-- Row 2: Cards with colors -->
+  <div class="stats-cards">
+    <div class="stat-card stat-card-blue">
+      <div class="stat-card-icon">📊</div>
+      <div class="stat-card-value" id="total"><%= job.total %></div>
+      <div class="stat-card-label">รวม</div>
+    </div>
+    <div class="stat-card stat-card-yellow">
+      <div class="stat-card-icon">⚙️</div>
+      <div class="stat-card-value" id="processed"><%= job.processed %></div>
+      <div class="stat-card-label">ประมวลผล</div>
+    </div>
+    <div class="stat-card stat-card-green">
+      <div class="stat-card-icon">✅</div>
+      <div class="stat-card-value" id="success"><%= job.success %></div>
+      <div class="stat-card-label">สำเร็จ</div>
+    </div>
+    <div class="stat-card stat-card-red">
+      <div class="stat-card-icon">❌</div>
+      <div class="stat-card-value" id="failed"><%= job.failed %></div>
+      <div class="stat-card-label">ผิดพลาด</div>
+    </div>
+  </div>
+  
   <progress id="progress" max="<%= job.total %>" value="<%= job.processed %>"></progress>
+  
+  <!-- Excel Data Display -->
+  <% if (excelData && Array.isArray(excelData) && excelData.length > 0) { %>
+  <% 
+    // Check if data is array of objects or array of arrays
+    const isArrayOfObjects = typeof excelData[0] === 'object' && !Array.isArray(excelData[0]);
+    let headers = [];
+    let dataRows = [];
+    
+    if (isArrayOfObjects) {
+      // Array of objects format
+      headers = excelData.length > 0 ? Object.keys(excelData[0]) : [];
+      dataRows = excelData;
+    } else {
+      // Array of arrays format
+      headers = Array.isArray(excelData[0]) ? excelData[0] : [];
+      dataRows = excelData.slice(1);
+    }
+    
+    const validRowCount = dataRows.length;
+  %>
+  <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(102, 126, 234, 0.2);">
+    <h3>📊 ข้อมูลจาก Excel (<span id="excel-count"><%= validRowCount %></span> แถว)</h3>
+    <div style="overflow-x: auto; margin-top: 16px;">
+      <table id="excel-table" class="display" style="width:100%">
+        <thead>
+          <tr>
+            <% headers.forEach(header => { %>
+              <th><%= header || '-' %></th>
+            <% }); %>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (isArrayOfObjects) { %>
+            <% dataRows.forEach(row => { %>
+              <tr>
+                <% headers.forEach(header => { %>
+                  <td><%= row[header] !== undefined ? row[header] : '-' %></td>
+                <% }); %>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <% dataRows.forEach(row => { %>
+              <tr>
+                <% if (Array.isArray(row)) { %>
+                  <% headers.forEach((_, index) => { %>
+                    <td><%= row[index] !== undefined ? row[index] : '-' %></td>
+                  <% }); %>
+                <% } %>
+              </tr>
+            <% }); %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <% } %>
  </section>
 
  <section class="card">
@@ -39,8 +139,8 @@
 
 <section class="card">
   <h3>ผลลัพธ์ต่อแถว</h3>
-    <div class="table-scroll">
-      <table>
+    <div style="overflow-x: auto;">
+      <table id="results-table" class="display" style="width:100%">
         <thead>
           <tr>
             <th>#</th>
@@ -65,8 +165,129 @@
   </main>
 
   <script src="/public/app.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    /* DataTables custom styling */
+    #excel-table_wrapper,
+    #results-table_wrapper {
+      padding: 0;
+    }
+    
+    #excel-table_wrapper .dataTables_length,
+    #excel-table_wrapper .dataTables_filter,
+    #results-table_wrapper .dataTables_length,
+    #results-table_wrapper .dataTables_filter {
+      margin-bottom: 16px;
+    }
+    
+    #excel-table_wrapper .dataTables_filter input,
+    #results-table_wrapper .dataTables_filter input {
+      padding: 8px 12px;
+      border: 2px solid rgba(102, 126, 234, 0.2);
+      border-radius: 8px;
+      margin-left: 8px;
+    }
+    
+    #excel-table_wrapper .dataTables_length select,
+    #results-table_wrapper .dataTables_length select {
+      padding: 6px 12px;
+      border: 2px solid rgba(102, 126, 234, 0.2);
+      border-radius: 8px;
+      margin: 0 8px;
+    }
+    
+    #excel-table_wrapper .dataTables_paginate,
+    #results-table_wrapper .dataTables_paginate {
+      margin-top: 16px;
+    }
+    
+    #excel-table_wrapper .dataTables_paginate .paginate_button,
+    #results-table_wrapper .dataTables_paginate .paginate_button {
+      padding: 6px 12px;
+      margin: 0 4px;
+      border-radius: 6px;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      background: rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+    }
+    
+    #excel-table_wrapper .dataTables_paginate .paginate_button.current,
+    #results-table_wrapper .dataTables_paginate .paginate_button.current {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white !important;
+      border: none;
+    }
+    
+    #excel-table_wrapper .dataTables_paginate .paginate_button:hover:not(.current),
+    #results-table_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
+      background: rgba(102, 126, 234, 0.1);
+    }
+    
+    #excel-table_wrapper .dataTables_info,
+    #results-table_wrapper .dataTables_info {
+      padding-top: 16px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+  </style>
   <script>
   window.setupJobDetail && window.setupJobDetail('<%= job.id %>');
+  
+  // Initialize DataTable for Excel data
+  <% if (excelData && Array.isArray(excelData) && excelData.length > 0) { %>
+  $(document).ready(function() {
+    $('#excel-table').DataTable({
+      pageLength: 10,
+      lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "ทั้งหมด"]],
+      language: {
+        search: "ค้นหา:",
+        lengthMenu: "แสดง _MENU_ แถวต่อหน้า",
+        info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ แถว",
+        infoEmpty: "ไม่มีข้อมูล",
+        infoFiltered: "(กรองจากทั้งหมด _MAX_ แถว)",
+        paginate: {
+          first: "หน้าแรก",
+          last: "หน้าสุดท้าย",
+          next: "ถัดไป",
+          previous: "ก่อนหน้า"
+        },
+        emptyTable: "ไม่มีข้อมูลในตาราง",
+        zeroRecords: "ไม่พบข้อมูลที่ค้นหา"
+      },
+      order: [] // No initial sorting
+    });
+  });
+  <% } %>
+  
+  // Initialize DataTable for Results table (make it global for app.js to access)
+  $(document).ready(function() {
+    window.resultsTable = $('#results-table').DataTable({
+      pageLength: 10,
+      lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "ทั้งหมด"]],
+      language: {
+        search: "ค้นหา:",
+        lengthMenu: "แสดง _MENU_ แถวต่อหน้า",
+        info: "แสดง _START_ ถึง _END_ จาก _TOTAL_ แถว",
+        infoEmpty: "ไม่มีข้อมูล",
+        infoFiltered: "(กรองจากทั้งหมด _MAX_ แถว)",
+        paginate: {
+          first: "หน้าแรก",
+          last: "หน้าสุดท้าย",
+          next: "ถัดไป",
+          previous: "ก่อนหน้า"
+        },
+        emptyTable: "ไม่มีข้อมูลในตาราง",
+        zeroRecords: "ไม่พบข้อมูลที่ค้นหา"
+      },
+      order: [[0, 'asc']], // Sort by row number
+      columnDefs: [
+        { orderable: true, targets: 0 } // Enable sorting on # column
+      ]
+    });
+  });
   </script>
 </body>
 </html>

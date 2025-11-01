@@ -3,6 +3,23 @@
     return document.getElementById(id);
   }
 
+  // Format ISO date to Thai format: 1/11/2568 23:19:45
+  function formatThaiDateTime(isoString) {
+    if (!isoString || isoString === "-") return "-";
+    try {
+      const date = new Date(isoString);
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const year = date.getFullYear() + 543; // Buddhist Era
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const seconds = String(date.getSeconds()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    } catch (e) {
+      return isoString;
+    }
+  }
+
   function renderJobsRow(j) {
     return `<tr>
       <td>${j.id}</td>
@@ -10,8 +27,8 @@
       <td>${j.total}</td>
       <td>${j.success}</td>
       <td>${j.failed}</td>
-      <td>${j.startedAt || "-"}</td>
-      <td>${j.endedAt || "-"}</td>
+      <td>${formatThaiDateTime(j.startedAt)}</td>
+      <td>${formatThaiDateTime(j.endedAt)}</td>
       <td><a class="btn" href="/jobs/${j.id}">ดู</a></td>
     </tr>`;
   }
@@ -52,27 +69,59 @@
       const status = r.ok ? "สำเร็จ" : "ผิดพลาด";
       const note = r.error || r.note || "";
       const dataStr = r.data ? JSON.stringify(r.data) : "";
-      return `<tr>
-        <td>${r.index}</td>
-        <td>${status}</td>
-        <td><code>${dataStr}</code></td>
-        <td>${note}</td>
-      </tr>`;
+      return [r.index, status, `<code>${dataStr}</code>`, note];
     }
 
     function fillJob(job) {
-      statusEl.textContent = job.status;
-      statusEl.className = `badge ${job.status}`;
+      let displayStatus = job.status;
+      let statusClass = job.status;
+
+      // Check if log contains LOGIN FAILED
+      const logText = (job.log || []).join("\n");
+      if (logText.includes("❌ LOGIN FAILED")) {
+        displayStatus = "failed";
+        statusClass = "failed";
+      }
+
+      statusEl.textContent = displayStatus;
+      statusEl.className = `badge ${statusClass}`;
       totalEl.textContent = job.total;
       processedEl.textContent = job.processed;
       successEl.textContent = job.success;
       failedEl.textContent = job.failed;
-      startedAtEl.textContent = job.startedAt || "-";
-      endedAtEl.textContent = job.endedAt || "-";
+      startedAtEl.textContent = formatThaiDateTime(job.startedAt);
+      endedAtEl.textContent = formatThaiDateTime(job.endedAt);
       progressEl.max = job.total;
       progressEl.value = job.processed;
-      resultsEl.innerHTML = (job.results || []).map(renderResultRow).join("");
-      logEl.textContent = (job.log || []).join("\n");
+
+      // Update DataTable if it exists, otherwise fallback to innerHTML
+      if (window.resultsTable) {
+        window.resultsTable.clear();
+        const results = job.results || [];
+        if (results.length > 0) {
+          results.forEach((r) => {
+            window.resultsTable.row.add(renderResultRow(r));
+          });
+        }
+        window.resultsTable.draw();
+      } else {
+        // Fallback for non-DataTable
+        resultsEl.innerHTML = (job.results || [])
+          .map((r) => {
+            const status = r.ok ? "สำเร็จ" : "ผิดพลาด";
+            const note = r.error || r.note || "";
+            const dataStr = r.data ? JSON.stringify(r.data) : "";
+            return `<tr>
+            <td>${r.index}</td>
+            <td>${status}</td>
+            <td><code>${dataStr}</code></td>
+            <td>${note}</td>
+          </tr>`;
+          })
+          .join("");
+      }
+
+      logEl.textContent = logText;
     }
 
     function refreshJob() {

@@ -5,3 +5,6 @@ playwright-report/
 playwright/.cache/
 playwright/.local-browsers/
 data/*.log
+
+
+/public/snapshots/
