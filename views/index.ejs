@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automation Key Form • หน้าแรก</title>
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Automation Key Form</h1>
+    <nav>
+      <a href="/">หน้าแรก</a>
+    </nav>
+  </header>
+  <main>
+ <section class="card">
+  <h2>เฉพาะ Step 1: ตรวจสอบเข้าสู่ระบบ</h2>
+  <form action="/start-login" method="post">
+    <div class="grid">
+      <label>
+        Username
+        <input type="text" name="username" required />
+      </label>
+      <label>
+        Password
+        <input type="password" name="password" required />
+      </label>
+      <label>
+        แสดงหน้าต่างเบราว์เซอร์ระหว่างทำงาน
+        <input type="checkbox" name="showBrowser" />
+      </label>
+    </div>
+    <button type="submit">เริ่ม Step 1 (ล็อกอิน)</button>
+  </form>
+ </section>
+
+ <section class="card">
+  <h2>อัปโหลด Excel และกรอกบัญชี</h2>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <div class="grid">
+      <label>
+        Username
+        <input type="text" name="username" required />
+      </label>
+      <label>
+        Password
+        <input type="password" name="password" required />
+      </label>
+      <label>
+        แสดงหน้าต่างเบราว์เซอร์ระหว่างทำงาน
+        <input type="checkbox" name="showBrowser" />
+      </label>
+      <label>
+        ไฟล์ Excel (.xlsx)
+        <input type="file" name="file" accept=".xlsx" required />
+      </label>
+    </div>
+    <button type="submit">เริ่มทำงาน</button>
+  </form>
+ </section>
+
+ <section class="card">
+  <h2>งานล่าสุด</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>สถานะ</th>
+        <th>รวม</th>
+        <th>สำเร็จ</th>
+        <th>ผิดพลาด</th>
+        <th>เริ่ม</th>
+        <th>เสร็จ</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="jobs-tbody">
+      <% jobs.forEach(j => { %>
+        <tr>
+          <td><%= j.id %></td>
+          <td><span class="badge <%= j.status %>"><%= j.status %></span></td>
+          <td><%= j.total %></td>
+          <td><%= j.success %></td>
+          <td><%= j.failed %></td>
+          <td><%= j.startedAt || '-' %></td>
+          <td><%= j.endedAt || '-' %></td>
+          <td><a class="btn" href="/jobs/<%= j.id %>">ดู</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+ </section>
+
+  </main>
+
+  <script src="/public/app.js"></script>
+  <script>
+  // Auto-refresh jobs table via SSE
+  window.setupJobsList && window.setupJobsList(document.getElementById('jobs-tbody'));
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automation Key Form • งาน</title>
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Automation Key Form</h1>
+    <nav>
+      <a href="/">หน้าแรก</a>
+    </nav>
+  </header>
+  <main class="split-layout">
+    <div class="left-panel">
+<section class="card">
+  <h2>งาน: <%= job.id %></h2>
+  <div class="grid stats">
+    <div>สถานะ: <span id="status" class="badge <%= job.status %>"><%= job.status %></span></div>
+    <div>รวม: <span id="total"><%= job.total %></span></div>
+    <div>ประมวลผล: <span id="processed"><%= job.processed %></span></div>
+    <div>สำเร็จ: <span id="success"><%= job.success %></span></div>
+    <div>ผิดพลาด: <span id="failed"><%= job.failed %></span></div>
+    <div>เริ่ม: <span id="startedAt"><%= job.startedAt || '-' %></span></div>
+    <div>เสร็จ: <span id="endedAt"><%= job.endedAt || '-' %></span></div>
+  </div>
+  <progress id="progress" max="<%= job.total %>" value="<%= job.processed %>"></progress>
+ </section>
+
+ <section class="card">
+  <h3>ตัวอย่างภาพสด (Live Preview)</h3>
+    <div class="live-preview">
+      <img id="live-snap" src="" alt="live snapshot" />
+      <div class="placeholder">กำลังรอภาพสด...</div>
+    </div>
+</section>
+
+<section class="card">
+  <h3>ผลลัพธ์ต่อแถว</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>สถานะ</th>
+            <th>ข้อมูล</th>
+            <th>หมายเหตุ/ข้อผิดพลาด</th>
+          </tr>
+        </thead>
+        <tbody id="results"></tbody>
+      </table>
+    </div>
+ </section>
+    </div>
+
+    <div class="right-panel">
+ <section class="card log-section">
+  <h3>Log</h3>
+  <pre id="log" class="log"></pre>
+</section>
+    </div>
+
+  </main>
+
+  <script src="/public/app.js"></script>
+  <script>
+  window.setupJobDetail && window.setupJobDetail('<%= job.id %>');
+  </script>
+</body>
+</html>

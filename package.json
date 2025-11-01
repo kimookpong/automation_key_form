@@ -1,0 +1,25 @@
+{
+  "name": "automation_key_form",
+  "version": "1.0.0",
+  "description": "Web automation to login to smartbmn.cdd.go.th and fill forms from Excel with monitoring UI (Node.js + Playwright)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon --watch src --watch views --watch public src/server.js",
+    "postinstall": "npx playwright install --with-deps || npx playwright install"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-ejs-layouts": "^2.5.1",
+    "multer": "^2.0.0",
+    "playwright": "^1.47.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

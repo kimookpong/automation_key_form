@@ -1,0 +1,7 @@
+node_modules/
+.env
+uploads/
+playwright-report/
+playwright/.cache/
+playwright/.local-browsers/
+data/*.log
